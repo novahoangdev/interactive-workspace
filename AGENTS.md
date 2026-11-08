@@ -23,23 +23,16 @@ Also read `DECISIONS.md` for durable decisions, `docs/architecture.md` when stru
 5. Performance when relevant
 
 ## Stack
-- Language: TODO
-- Framework: TODO
-- Package manager: TODO
-- Database: TODO
-- Deployment: TODO
-
-Delete irrelevant items.
+- Language: TypeScript
+- Framework: React 19, Three.js, Tailwind CSS v4
+- Package manager: Bun
+- Build tool: Vite
 
 ## Commands
-Install: `TODO`  
-Dev: `TODO`  
-Test: `TODO`  
-Lint: `TODO`  
-Type check: `TODO`  
-Build: `TODO`
-
-Delete commands that do not apply. Never invent commands.
+Install: `bun install`  
+Dev: `bun run dev`  
+Type check: `bun run lint`  
+Build: `bun run build`
 
 ## Architecture boundaries
 TODO: list only important boundaries agents must not violate.
