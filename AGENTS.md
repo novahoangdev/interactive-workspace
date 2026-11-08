@@ -27,6 +27,7 @@ Also read `DECISIONS.md` for durable decisions, `docs/architecture.md` when stru
 - Framework: React 19, Three.js, Tailwind CSS v4
 - Package manager: Bun
 - Build tool: Vite
+- Deployment: Firebase Hosting (auto deploy from `main` via GitHub Actions)
 
 ## Commands
 Install: `bun install`  

@@ -228,9 +228,9 @@ export function createInteractiveProps(islandRadius: number = 28.0): Interactive
   // position) lines them up with the circuit's travel direction (sin φ, 0, -cos φ), the same
   // direction as the painted lane arrows.
   const boostPadPositions = [
-    new THREE.Vector3(15.5, 0.415, 0),
+    new THREE.Vector3(0, 0.415, -15.5), // back straight (the right straight holds the start line)
     new THREE.Vector3(11.0, 0.415, -11.0),
-    new THREE.Vector3(0, 0.415, 15.5), // front straight (back straight holds the start line)
+    new THREE.Vector3(0, 0.415, 15.5), // front straight
     new THREE.Vector3(-11.0, 0.415, -11.0),
   ].map((pos) => ({ pos, rotY: -Math.atan2(pos.z, pos.x) }));
 
