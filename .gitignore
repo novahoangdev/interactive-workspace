@@ -15,3 +15,6 @@ dist/
 build/
 coverage/
 *.log
+
+# Vite cache
+.vite/
