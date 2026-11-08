@@ -243,9 +243,9 @@ export function createLowPolyIsland(radius: number = 28, depth: number = 12, col
     });
   });
 
-  // --- Start / finish line on the back of the circuit, turned ~29° off the -Z axis so
-  // the gantry is neither in front of the default camera (+Z) nor straight behind the desk ---
-  const SF_YAW = -0.5;
+  // --- Start / finish line on the right-hand straight (+X), so the gantry frames the right
+  // side of the default view instead of sitting behind the desk ---
+  const SF_YAW = -Math.PI / 2;
   const startGroup = new THREE.Group();
   startGroup.rotation.y = SF_YAW;
   islandGroup.add(startGroup);
