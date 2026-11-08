@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { SectionId, LightingMode, ProjectItem, CameraViewMode, WorkstationToast } from './types';
 import { ThreeCanvas } from './three/ThreeCanvas';
 import { NavigationHUD } from './components/NavigationHUD';
 import { SectionOverlay } from './components/SectionOverlay';
-import { ProjectModal } from './components/ProjectModal';
-import { FullCVModal } from './components/FullCVModal';
 import { WorkstationControls } from './components/WorkstationControls';
 import { DrivingHUD } from './components/DrivingHUD';
 import { soundManager } from './utils/soundManager';
+
+// Modals are fetched on first open (and prefetched when the browser is idle) to keep the first load small
+const loadProjectModal = () => import('./components/ProjectModal');
+const loadFullCVModal = () => import('./components/FullCVModal');
+const ProjectModal = lazy(() => loadProjectModal().then((m) => ({ default: m.ProjectModal })));
+const FullCVModal = lazy(() => loadFullCVModal().then((m) => ({ default: m.FullCVModal })));
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
@@ -33,6 +37,30 @@ export default function App() {
   const [focusVehicleTrigger, setFocusVehicleTrigger] = useState<number>(0);
   const [gemsCollected, setGemsCollected] = useState<number>(0);
   const [totalGems, setTotalGems] = useState<number>(8);
+  const [cvModalMounted, setCvModalMounted] = useState<boolean>(false);
+  const [projectModalMounted, setProjectModalMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isFullCVOpen) setCvModalMounted(true);
+  }, [isFullCVOpen]);
+
+  useEffect(() => {
+    if (selectedProject) setProjectModalMounted(true);
+  }, [selectedProject]);
+
+  useEffect(() => {
+    const prefetch = () => {
+      loadFullCVModal();
+      loadProjectModal();
+    };
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(prefetch, { timeout: 6000 })
+      : window.setTimeout(prefetch, 4000);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+    };
+  }, []);
 
   const drivingInputRef = useRef<{
     forward: boolean;
@@ -401,16 +429,24 @@ export default function App() {
       )}
 
       {/* Interactive Project Detail Modal */}
-      <ProjectModal
-        project={selectedProject}
-        onClose={() => setSelectedProject(null)}
-      />
+      {(selectedProject || projectModalMounted) && (
+        <Suspense fallback={null}>
+          <ProjectModal
+            project={selectedProject}
+            onClose={() => setSelectedProject(null)}
+          />
+        </Suspense>
+      )}
 
       {/* Full Resume / CV Document Reader & Print Modal */}
-      <FullCVModal
-        isOpen={isFullCVOpen}
-        onClose={() => setIsFullCVOpen(false)}
-      />
+      {(isFullCVOpen || cvModalMounted) && (
+        <Suspense fallback={null}>
+          <FullCVModal
+            isOpen={isFullCVOpen}
+            onClose={() => setIsFullCVOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
