@@ -9,6 +9,7 @@ import {
 import { WorkstationInstance } from './workstation';
 import { PROJECTS } from '../data/cvData';
 import { soundManager } from '../utils/soundManager';
+import { finishBoot, prefersReducedMotion, setBootStep } from '../utils/bootSplash';
 import { createNovaAvatarVehicle, VehicleController } from './characterVehicle';
 import { createRgbStudioColumn } from './cornerDecor';
 import { createInteractiveProps, InteractivePropsManager } from './interactiveProps';
@@ -47,6 +48,9 @@ interface ThreeCanvasProps {
 }
 
 // Camera coordinates focused on Central Workstation Island (Wide Studio Overview - Low Angle, Expansive View)
+// Length of the opening camera arc that plays as the boot splash fades
+const INTRO_DURATION_MS = 2400;
+
 const CAMERA_PRESETS: Record<SectionId, { pos: THREE.Vector3; target: THREE.Vector3 }> = {
   overview: {
     pos: new THREE.Vector3(0, 4.25, 11.2),
@@ -193,6 +197,11 @@ const ThreeCanvasComponent: React.FC<ThreeCanvasProps> = ({
   const destinationPos = useRef<THREE.Vector3>(new THREE.Vector3(0, 3.8, 5.2));
   const destinationTarget = useRef<THREE.Vector3>(new THREE.Vector3(0, 1.35, 0));
   const focusedDeskItemRef = useRef<string | null>(null);
+  const intro = useRef<{ state: 'waiting' | 'playing' | 'done'; start: number; from: THREE.Spherical }>({
+    state: 'done',
+    start: 0,
+    from: new THREE.Spherical(),
+  });
 
   // Lighting refs for dynamic theme switches
   const dirLightRef = useRef<THREE.DirectionalLight | null>(null);
@@ -505,12 +514,21 @@ const ThreeCanvasComponent: React.FC<ThreeCanvasProps> = ({
     const initialAspect = width / height;
     const initialFov = initialAspect < 1.0 ? Math.min(62, 45 + (1.0 - initialAspect) * 22) : 45;
     const camera = new THREE.PerspectiveCamera(initialFov, initialAspect, 0.05, 120);
-    // Smooth cinematic intro: start slightly pulled back & higher, then gracefully swoop into workstation
-    const introPos = new THREE.Vector3(
-      CAMERA_PRESETS.overview.pos.x,
-      CAMERA_PRESETS.overview.pos.y + 2.8,
-      CAMERA_PRESETS.overview.pos.z + 4.2
+    // Cinematic intro: wait behind the boot splash at a high, wide angle swung off to the side,
+    // then arc around the desk into the overview shot once the splash fades (see animate()).
+    const overviewOffset = new THREE.Spherical().setFromVector3(
+      CAMERA_PRESETS.overview.pos.clone().sub(CAMERA_PRESETS.overview.target)
     );
+    const introFrom = new THREE.Spherical(
+      overviewOffset.radius * 1.65,
+      overviewOffset.phi * 0.55,
+      overviewOffset.theta + 0.9
+    );
+    const introPos = CAMERA_PRESETS.overview.target.clone().add(new THREE.Vector3().setFromSpherical(introFrom));
+    intro.current = prefersReducedMotion()
+      ? { state: 'done', start: 0, from: introFrom }
+      : { state: 'waiting', start: 0, from: introFrom };
+    if (intro.current.state === 'done') introPos.copy(CAMERA_PRESETS.overview.pos);
     camera.position.copy(introPos);
     currentPos.current.copy(introPos);
     destinationPos.current.copy(CAMERA_PRESETS.overview.pos);
@@ -1090,6 +1108,35 @@ const ThreeCanvasComponent: React.FC<ThreeCanvasProps> = ({
     let animationFrameId: number;
     let lastTime = performance.now();
     let lastRenderTime = 0;
+    let firstFrameDrawn = false;
+    let sceneWarm = false;
+    const baseExposure = renderer.toneMappingExposure;
+    const introTo = new THREE.Spherical();
+    const introNow = new THREE.Spherical();
+    const introTmp = new THREE.Vector3();
+    setBootStep(0.9, 'Lighting the scene');
+
+    // Compile every shader and upload every texture while the splash still covers the page, so the
+    // fly-in, the first orbit and the first drive never stall on a just-in-time GPU upload.
+    const warmUpScene = async () => {
+      const textures = new Set<THREE.Texture>();
+      scene.traverse((obj) => {
+        const material = (obj as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        if (!material) return;
+        (Array.isArray(material) ? material : [material]).forEach((m) => {
+          Object.values(m).forEach((v) => {
+            if (v instanceof THREE.Texture) textures.add(v);
+          });
+        });
+      });
+      textures.forEach((t) => renderer.initTexture(t));
+      await renderer.compileAsync(scene, camera);
+    };
+    warmUpScene()
+      .catch(() => undefined)
+      .finally(() => {
+        sceneWarm = true;
+      });
 
     const animate = (currentTime: number) => {
       animationFrameId = requestAnimationFrame(animate);
@@ -1101,6 +1148,11 @@ const ThreeCanvasComponent: React.FC<ThreeCanvasProps> = ({
       const delta = Math.min((timeMs - lastTime) / 1000, 0.1);
       lastTime = timeMs;
       const elapsedTime = timeMs / 1000;
+
+      // A drag or switching to the kart during the fly-in hands the camera straight back to the user
+      if (intro.current.state === 'playing' && (isFreeOrbit.current || isDrivingRef.current)) {
+        intro.current.state = 'done';
+      }
 
       // 2. Debounced hover check (runs at most once per frame, aligned with screen refresh rate)
       if (pendingHover.current && !isDragging.current) {
@@ -1258,6 +1310,22 @@ const ThreeCanvasComponent: React.FC<ThreeCanvasProps> = ({
               currentPos.current.lerp(destinationPos.current, 0.2);
             }
           }
+        } else if (intro.current.state === 'waiting') {
+          // Hold the opening shot until the boot splash fades
+        } else if (intro.current.state === 'playing') {
+          // Arc from the opening shot into the live destination (follows any preset picked mid-flight)
+          const t = THREE.MathUtils.clamp((timeMs - intro.current.start) / INTRO_DURATION_MS, 0, 1);
+          const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+          const to = introTo.setFromVector3(introTmp.copy(destinationPos.current).sub(destinationTarget.current));
+          const from = intro.current.from;
+          introNow.set(
+            THREE.MathUtils.lerp(from.radius, to.radius, e),
+            THREE.MathUtils.lerp(from.phi, to.phi, e),
+            from.theta + (Math.atan2(Math.sin(to.theta - from.theta), Math.cos(to.theta - from.theta))) * e
+          );
+          currentTarget.current.copy(destinationTarget.current);
+          currentPos.current.setFromSpherical(introNow).add(destinationTarget.current);
+          if (t >= 1) intro.current.state = 'done';
         } else {
           // Smooth camera glide to section or camera preset
           const lerpFactor = Math.min(1.0, delta * 6.5);
@@ -1292,7 +1360,44 @@ const ThreeCanvasComponent: React.FC<ThreeCanvasProps> = ({
         shadowFramesRemaining.current--;
       }
 
+      // Intro "lights up": exposure rises, fog thins and the lens settles while the camera arcs in
+      let lightsUp = 1;
+      if (intro.current.state === 'waiting') lightsUp = 0;
+      else if (intro.current.state === 'playing') {
+        const lt = THREE.MathUtils.clamp((timeMs - intro.current.start) / 1400, 0, 1);
+        lightsUp = 1 - Math.pow(1 - lt, 3); // easeOutCubic
+      }
+      const fog = scene.fog instanceof THREE.FogExp2 ? scene.fog : null;
+      const baseFogDensity = fog ? fog.density : 0;
+      if (lightsUp < 1) {
+        renderer.toneMappingExposure = baseExposure * (0.4 + 0.6 * lightsUp);
+        if (fog) fog.density = baseFogDensity * (1 + 3 * (1 - lightsUp));
+      }
+      const zoom = intro.current.state === 'done' ? 1 : 0.9 + 0.1 * lightsUp;
+      if (camera.zoom !== zoom) {
+        camera.zoom = zoom;
+        camera.updateProjectionMatrix();
+      }
+
       renderer.render(scene, camera);
+
+      if (lightsUp < 1) {
+        renderer.toneMappingExposure = baseExposure;
+        if (fog) fog.density = baseFogDensity;
+      }
+
+      if (!firstFrameDrawn && sceneWarm) {
+        firstFrameDrawn = true;
+        // Wait one more frame so the first render is actually on screen before the splash fades
+        requestAnimationFrame(() =>
+          finishBoot(() => {
+            if (intro.current.state === 'waiting') {
+              intro.current.state = 'playing';
+              intro.current.start = performance.now() + 120;
+            }
+          })
+        );
+      }
     };
 
     animationFrameId = requestAnimationFrame(animate);

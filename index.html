@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="app-booting">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
@@ -43,7 +43,76 @@
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" crossorigin="anonymous" />
+    <!-- Fonts load without blocking first paint; the boot splash uses system fonts until they arrive -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" crossorigin="anonymous" /></noscript>
+
+    <!-- Boot splash: painted immediately, faded out by src/utils/bootSplash.ts after the first 3D frame -->
+    <style>
+      html, body { margin: 0; background: #eeeae2; }
+      /* Radius of the hole the splash opens to reveal the scene (animatable where @property is supported) */
+      @property --boot-hole { syntax: '<length>'; inherits: false; initial-value: -200px; }
+      #boot-splash {
+        position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center;
+        background: radial-gradient(120% 90% at 50% 38%, #fef7dc 0%, #f3eee3 55%, #e8e3d8 100%);
+        color: #172b36;
+        font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --boot-hole: -200px;
+        -webkit-mask: radial-gradient(circle at 50% 46%, transparent var(--boot-hole), #000 calc(var(--boot-hole) + 200px));
+        mask: radial-gradient(circle at 50% 46%, transparent var(--boot-hole), #000 calc(var(--boot-hole) + 200px));
+        transition:
+          --boot-hole 1.2s cubic-bezier(0.5, 0, 0.2, 1) 0.08s,
+          opacity 0.45s ease 0.9s,
+          visibility 0s linear 1.35s;
+      }
+      #boot-splash.boot-done { --boot-hole: 140vmax; opacity: 0; visibility: hidden; pointer-events: none; }
+      .boot-card {
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        animation: boot-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        transition: transform 0.5s cubic-bezier(0.36, 0, 0.66, -0.56), opacity 0.35s ease, filter 0.35s ease;
+      }
+      #boot-splash.boot-done .boot-card { transform: scale(1.12); opacity: 0; filter: blur(6px); }
+      .boot-avatar { position: relative; width: 96px; height: 96px; margin-bottom: 14px; }
+      .boot-avatar img {
+        position: absolute; inset: 7px; width: 82px; height: 82px; border-radius: 50%;
+        object-fit: cover; background: #d4e7e4; box-shadow: 0 10px 30px rgba(24, 43, 54, 0.18);
+      }
+      .boot-ring {
+        position: absolute; inset: 0; border-radius: 50%;
+        background: conic-gradient(from 0deg, rgba(47, 126, 124, 0) 0deg, #2f7e7c 290deg, #78bbb5 360deg);
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+        mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+        animation: boot-spin 1.1s linear infinite;
+      }
+      .boot-name { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+      .boot-role { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #65727a; }
+      .boot-bar {
+        position: relative; width: 184px; height: 3px; margin-top: 20px; border-radius: 999px;
+        background: rgba(23, 43, 54, 0.1); overflow: hidden;
+      }
+      .boot-bar span {
+        position: absolute; inset: 0; border-radius: inherit; transform-origin: left center;
+        transform: scaleX(var(--boot-progress, 0.06));
+        background: linear-gradient(90deg, #2f7e7c, #78bbb5);
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .boot-bar::after {
+        content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+        animation: boot-shimmer 1.4s ease-in-out infinite;
+      }
+      .boot-step {
+        margin: 10px 0 0; min-height: 12px; color: #65727a;
+        font: 500 11px/1 ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+      }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @keyframes boot-in { from { transform: translateY(10px) scale(0.98); } }
+      @keyframes boot-shimmer { to { transform: translateX(100%); } }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-ring, .boot-bar::after, .boot-card { animation: none; }
+        #boot-splash, .boot-card, .boot-bar span { transition-duration: 0.01s; transition-delay: 0s; }
+      }
+    </style>
 
     <!-- Structured Data (JSON-LD) for Google Rich Snippets & Search Graph -->
     <script type="application/ld+json">
@@ -106,6 +175,28 @@
     </script>
   </head>
   <body class="bg-[#101a20] text-[#edf2ef] antialiased overflow-hidden select-none font-['Manrope','Plus_Jakarta_Sans',sans-serif]">
+    <div id="boot-splash" role="status" aria-live="polite">
+      <div class="boot-card">
+        <div class="boot-avatar">
+          <span class="boot-ring"></span>
+          <img src="/images/hoa-hoang-256.webp" alt="" width="82" height="82" decoding="async" />
+        </div>
+        <p class="boot-name">Nova Hoang</p>
+        <p class="boot-role">Interactive 3D workspace</p>
+        <div class="boot-bar" aria-hidden="true"><span></span></div>
+        <p class="boot-step" id="boot-step">Loading assets…</p>
+      </div>
+    </div>
+    <script>
+      // Ease the bar forward while the bundle downloads; src/utils/bootSplash.ts takes over from here
+      (function () {
+        var p = 0.06, root = document.documentElement;
+        window.__bootCreep = window.setInterval(function () {
+          p += (0.55 - p) * 0.08;
+          root.style.setProperty('--boot-progress', p.toFixed(3));
+        }, 120);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
