@@ -1,0 +1,524 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --page: #eeeae2;
+  --surface: #f8f6f1;
+  --surface-strong: #ffffff;
+  --ink: #172b36;
+  --muted: #65727a;
+  --line: #d5d1c9;
+  --accent: #2f7e7c;
+  --accent-soft: #d4e7e4;
+  --accent-bright: #78bbb5;
+  --navy: #172b36;
+  --paper: #f8f7f3;
+  --shadow: 0 24px 70px rgba(24, 43, 54, 0.12);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+:root.dark,
+.dark,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #101a20;
+  --surface: #17242b;
+  --surface-strong: #1c2c34;
+  --ink: #edf2ef;
+  --muted: #a9b5b7;
+  --line: #304149;
+  --accent: #78bbb5;
+  --accent-soft: #203c3e;
+  --accent-bright: #8accc6;
+  --navy: #0c171d;
+  --paper: #1a292f;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+body {
+  font-family: 'Manrope', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  color: var(--ink);
+  background-color: var(--page);
+}
+
+/* Nova Hoang Design System Buttons & Tabs */
+.btn-nova-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 0.55rem 1.15rem;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 4px 14px -2px rgba(47, 126, 124, 0.35);
+  transition: all 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-nova-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px -2px rgba(47, 126, 124, 0.45);
+}
+.btn-nova-primary:active {
+  transform: scale(0.96);
+}
+
+.btn-nova-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.55rem 1.15rem;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  transition: all 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-nova-secondary:hover {
+  background-color: var(--paper);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px -3px rgba(47, 126, 124, 0.25);
+}
+.btn-nova-secondary:active {
+  transform: scale(0.96);
+}
+
+/* Nova Hoang Market Tabs */
+.nova-tabs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem;
+  border-radius: 9999px;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  transition: all 0.25s ease;
+}
+.nova-tabs-pill:hover {
+  border-color: var(--accent);
+}
+
+.nova-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.nova-tab-item:hover {
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.nova-tab-item:active {
+  transform: scale(0.95);
+}
+.nova-tab-item.active {
+  background-color: var(--ink);
+  color: var(--page);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transform: translateY(0);
+  animation: tabActivePop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.nova-tab-item.active .nova-tab-badge {
+  background-color: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.55);
+  transform: scale(1.05);
+}
+
+.nova-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: var(--page);
+  color: var(--muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  padding: 0 0.35rem;
+  transition: all 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ==============================================================
+   ANIMATION KEYFRAMES & MICRO-INTERACTIONS
+   ============================================================== */
+
+/* 1. First Page Load Entrance Animations */
+@keyframes heroHeaderDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroDockRise {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.96);
+  }
+  70% {
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes heroHintFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-header {
+  animation: heroHeaderDrop 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-hero-dock {
+  animation: heroDockRise 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.animate-hero-hint {
+  animation: heroHintFloat 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+}
+
+/* 2. Tab Switch & Active Transitions */
+@keyframes tabActivePop {
+  0% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tabContentFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-tab-content {
+  animation: tabContentFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 3. Dropdown & Popover Smooth Animations */
+@keyframes dropdownSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes popoverSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown {
+  transform-origin: top right;
+  animation: dropdownSlideDown 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-popover {
+  transform-origin: bottom center;
+  animation: popoverSlideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* 4. Sound Speaker Toggle Animations */
+@keyframes speakerUnmuteBounce {
+  0% {
+    transform: scale(0.7) rotate(-14deg);
+  }
+  50% {
+    transform: scale(1.22) rotate(8deg);
+  }
+  80% {
+    transform: scale(0.95) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes speakerMuteSnap {
+  0% {
+    transform: scale(1.18);
+  }
+  40% {
+    transform: scale(0.85) rotate(-6deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes soundWavesRadiate {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateX(-2px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.9;
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes soundRingRipple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(120, 187, 181, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(120, 187, 181, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(120, 187, 181, 0);
+  }
+}
+
+.animate-speaker-unmute {
+  animation: speakerUnmuteBounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-speaker-mute {
+  animation: speakerMuteSnap 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-sound-waves {
+  animation: soundWavesRadiate 0.35s ease-out both;
+}
+
+.animate-sound-ripple {
+  animation: soundRingRipple 0.5s cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+/* 5. Modal Smooth Open & Close Animations */
+@keyframes modalBackdropFadeIn {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes modalBackdropFadeOut {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+}
+
+@keyframes modalCardSpringIn {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(0.93);
+  }
+  70% {
+    transform: translateY(-3px) scale(1.008);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalCardSmoothOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.95);
+  }
+}
+
+.animate-modal-backdrop-in {
+  animation: modalBackdropFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-modal-backdrop-out {
+  animation: modalBackdropFadeOut 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.animate-modal-card-in {
+  animation: modalCardSpringIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-modal-card-out {
+  animation: modalCardSmoothOut 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@layer utilities {
+  /* Universal clean minimalist scrollbar with ZERO background */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--line);
+    border-radius: 9999px;
+    border: none;
+    transition: background-color 0.2s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent);
+  }
+
+  /* Clean, ultra-sleek minimalist scrollbar with ZERO background */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--line);
+    border-radius: 9999px;
+    border: none;
+    transition: background-color 0.2s ease;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: var(--accent);
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Print styles for Full CV Document */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
+  body, html {
+    background-color: #ffffff !important;
+    color: #172b36 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+  }
+  #three-canvas-container,
+  header,
+  nav,
+  aside,
+  button,
+  .no-print {
+    display: none !important;
+  }
+  .fixed {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    inset: auto !important;
+  }
+  #cv-modal-wrapper,
+  .max-w-4xl {
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #172b36 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #cv-printable-content {
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
+    background-color: #ffffff !important;
+    color: #172b36 !important;
+    padding: 0 !important;
+  }
+  h1, h2, h3, h4, p, span, li, a {
+    color: #172b36 !important;
+  }
+}

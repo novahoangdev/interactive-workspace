@@ -1,60 +1,51 @@
 # interactive-workspace
 
-An interactive 3D workspace showcasing my desk setup, profile, projects, and professional journey.
-
-## Status
-Early setup — stack not chosen yet.
-
-## Goals
-- TODO
-
-## Non-goals
-- TODO
+An interactive 3D workspace showcasing my desk setup, profile, projects, and professional journey. Explore the desk, open the CV, or drive the kart around the circuit.
 
 ## Tech stack
-- TODO
+- React 19 + TypeScript
+- Three.js (procedural models, no external 3D assets)
+- Tailwind CSS v4
+- Vite
+- Web Audio API for sound effects and music
 
 ## Getting started
 ### Requirements
-- TODO
+- [Bun](https://bun.sh)
 
 ### Install
 ```bash
-TODO
+bun install
 ```
 
 ### Development
 ```bash
-TODO
+bun run dev      # http://localhost:3000
 ```
 
 ## Commands
 | Purpose | Command |
 |---|---|
-| Dev | `TODO` |
-| Test | `TODO` |
-| Lint | `TODO` |
-| Type check | `TODO` |
-| Build | `TODO` |
-
-Delete irrelevant rows.
+| Dev | `bun run dev` |
+| Type check | `bun run lint` |
+| Build | `bun run build` |
+| Preview build | `bun run preview` |
 
 ## Project structure
 ```text
-TODO
+public/            static images, favicon, web manifest
+src/
+  components/      React overlays: HUD, CV modal, project modal, controls
+  data/cvData.ts   profile and CV content
+  three/           Three.js scene: workstation, circuit, kart, prop physics
+  utils/           Web Audio sound manager
 ```
 
-## Environment variables
-Use `.env.example`; never document real secrets.
+## Content
+Profile and CV content lives in `src/data/cvData.ts` and must stay in sync with `PROFILE.md` in the [portfolio repo](https://github.com/novahoangdev/portfolio). The "Download PDF" button links to the reviewed CV PDFs published on novahoangdev.web.app.
 
 ## Documentation
 - `AGENTS.md` — project agent rules
 - `DECISIONS.md` — durable decisions
 - `docs/architecture.md` — architecture
-- `docs/design-system.md` — UI conventions when relevant
-
-## Deployment
-TODO
-
-## License
-TODO
+- `docs/design-system.md` — UI conventions
